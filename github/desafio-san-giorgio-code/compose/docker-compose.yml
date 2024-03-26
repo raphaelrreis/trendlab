@@ -1,0 +1,17 @@
+version: '3.1'
+
+services:
+  db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_DB: sangiorgio_db
+      POSTGRES_USER: sangiorgio_user
+      POSTGRES_PASSWORD: root
+    ports:
+      - "5432:5432"
+    volumes:
+      - sangiorgio_db_data:/var/lib/postgresql/data
+
+volumes:
+  sangiorgio_db_data:
