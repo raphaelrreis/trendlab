@@ -1,7 +1,9 @@
-import pandas as pd
 import numpy as np
+import pandas as pd
 import pytest
+
 from trendlab.analytics.features import FeatureEngineer
+
 
 @pytest.fixture
 def sample_data():

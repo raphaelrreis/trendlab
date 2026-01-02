@@ -1,7 +1,7 @@
 import logging
-import pandas as pd
 from pathlib import Path
-from typing import List
+
+import pandas as pd
 
 from trendlab.domain.models import MarketDataPoint
 from trendlab.domain.ports import StorageAdapter
@@ -21,7 +21,7 @@ class ParquetStorage(StorageAdapter):
         self.raw_dir.mkdir(parents=True, exist_ok=True)
         self.processed_dir.mkdir(parents=True, exist_ok=True)
 
-    def save_raw(self, asset: str, data: List[MarketDataPoint]) -> None:
+    def save_raw(self, asset: str, data: list[MarketDataPoint]) -> None:
         if not data:
             logger.warning(f"No data to save for {asset}")
             return

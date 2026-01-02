@@ -36,17 +36,18 @@ types-requests = "^2.31.0"
 trendlab = "trendlab.cli.main:app"
 
 [tool.ruff]
-line-length = 88
+line-length = 120
 target-version = "py311"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "SIM"]
-ignore = []
+ignore = ["B008"]
 
 [tool.mypy]
 python_version = "3.11"
 strict = true
 ignore_missing_imports = true
+disable_error_code = ["import-untyped"]
 
 [build-system]
 requires = ["poetry-core"]

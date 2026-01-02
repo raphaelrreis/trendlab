@@ -1,9 +1,9 @@
-import os
 import logging
-from typing import List, Optional
-from fastapi import FastAPI, BackgroundTasks, HTTPException
-from pydantic import BaseModel
+import os
 from pathlib import Path
+
+from fastapi import BackgroundTasks, FastAPI
+from pydantic import BaseModel
 
 from trendlab.application.pipeline import PipelineService
 from trendlab.domain.models import Asset
@@ -45,7 +45,7 @@ ASSET_MAP = {
 }
 
 class RunRequest(BaseModel):
-    assets: List[str] = ["btc", "eth"]
+    assets: list[str] = ["btc", "eth"]
     days: int = 365
     horizon: int = 1
 

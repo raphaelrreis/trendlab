@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Dict, Optional
+
 
 class AssetClass(str, Enum):
     CRYPTO = "crypto"
@@ -30,7 +30,7 @@ class Prediction:
     probability_up: float
     signal: str  # "BULLISH", "BEARISH", "NEUTRAL"
     confidence_score: float
-    supporting_metrics: Dict[str, float]
+    supporting_metrics: dict[str, float]
 
 @dataclass
 class MarketInsight:

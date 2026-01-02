@@ -1,13 +1,13 @@
 import logging
-from typing import Dict, Tuple, Any
+
 import pandas as pd
 import numpy as np
-from sklearn.linear_model import LogisticRegression
-from sklearn.ensemble import GradientBoostingClassifier
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import TimeSeriesSplit
-from sklearn.metrics import accuracy_score, precision_score, roc_auc_score, log_loss
+from sklearn.linear_model import LogisticRegression  # type: ignore
+from sklearn.ensemble import GradientBoostingClassifier  # type: ignore
+from sklearn.pipeline import Pipeline  # type: ignore
+from sklearn.preprocessing import StandardScaler  # type: ignore
+from sklearn.model_selection import TimeSeriesSplit  # type: ignore
+from sklearn.metrics import accuracy_score, precision_score, roc_auc_score, log_loss  # type: ignore
 
 from trendlab.domain.ports import MLModel
 
@@ -34,7 +34,7 @@ class ModelEngine(MLModel):
             ('classifier', clf)
         ])
 
-    def train(self, X: pd.DataFrame, y: pd.Series) -> Dict[str, float]:
+    def train(self, X: pd.DataFrame, y: pd.Series) -> dict[str, float]:
         """
         Trains the model using TimeSeriesSplit cross-validation to ensure rigor.
         Returns aggregated metrics.
@@ -42,7 +42,7 @@ class ModelEngine(MLModel):
         self.feature_cols = list(X.columns)
         tscv = TimeSeriesSplit(n_splits=5)
         
-        metrics = {
+        metrics: dict[str, list[float]] = {
             "accuracy": [],
             "precision": [],
             "auc": [],
@@ -51,7 +51,7 @@ class ModelEngine(MLModel):
         
         logger.info(f"Starting training with {self.model_type}...")
         
-        for fold, (train_index, test_index) in enumerate(tscv.split(X)):
+        for _, (train_index, test_index) in enumerate(tscv.split(X)):
             X_train, X_test = X.iloc[train_index], X.iloc[test_index]
             y_train, y_test = y.iloc[train_index], y.iloc[test_index]
             

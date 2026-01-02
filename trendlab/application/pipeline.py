@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import List
+from typing import cast, Any
 
 from trendlab.domain.models import Asset, Prediction, MarketInsight
 from trendlab.domain.ports import DataProvider, StorageAdapter
@@ -20,12 +20,12 @@ class PipelineService:
         self.engineer = FeatureEngineer()
         self.reporter = ReportGenerator(root_dir / "reports")
 
-    def fetch_data(self, assets: List[Asset], days: int):
+    def fetch_data(self, assets: list[Asset], days: int):
         for asset in assets:
             data = self.provider.fetch_history(asset, days)
             self.storage.save_raw(asset.symbol, data)
 
-    def build_features(self, assets: List[Asset]):
+    def build_features(self, assets: list[Asset]):
         for asset in assets:
             try:
                 raw_df = self.storage.load_raw(asset.symbol)
@@ -34,7 +34,7 @@ class PipelineService:
             except Exception as e:
                 logger.error(f"Failed to build features for {asset.name}: {e}")
 
-    def run_inference(self, assets: List[Asset], model_type: str = "logistic") -> List[Prediction]:
+    def run_inference(self, assets: list[Asset], model_type: str = "logistic") -> list[Prediction]:
         predictions = []
         for asset in assets:
             try:
@@ -54,7 +54,7 @@ class PipelineService:
                 model = ModelEngine(model_type=model_type)
                 metrics = model.train(X, y)
                 
-                # Inference on latest data (the last row of df, which might have been dropped in create_dataset if target was nan)
+                # Inference on latest data (the last row of df, which might have been dropped in create_dataset if target was nan)  # noqa: E501
                 # We need the most recent row from df (which represents "today") to predict "tomorrow"
                 latest_row = df.iloc[[-1]].drop(columns=['target_next_day_up'], errors='ignore')
                 
@@ -63,7 +63,9 @@ class PipelineService:
                      logger.warning(f"Cannot predict for {asset.name}: latest data incomplete.")
                      continue
 
-                prob_up = model.predict_proba(latest_row).iloc[0, 1]
+                # Force cast to float for mypy satisfaction
+                prob_raw = model.predict_proba(latest_row).iloc[0, 1]
+                prob_up = float(cast(float, prob_raw))
                 
                 # Heuristic signal generation
                 signal = "NEUTRAL"
@@ -90,7 +92,7 @@ class PipelineService:
                 
         return predictions
 
-    def generate_insights(self, assets: List[Asset]) -> List[MarketInsight]:
+    def generate_insights(self, assets: list[Asset]) -> list[MarketInsight]:
         insights = []
         for asset in assets:
             try:
@@ -98,14 +100,24 @@ class PipelineService:
                 latest = df.iloc[-1]
                 
                 # Simple heuristics
-                trend = "UP" if latest['sma_50'] > latest['sma_200'] else "DOWN"
-                vol_state = "HIGH" if latest['vol_30d'] > 0.05 else "LOW" # 5% daily vol threshold
-                regime = "TRENDING" if abs(latest['rsi_14'] - 50) > 10 else "RANGING"
+                # Use float() to ensure python types for comparison
+                sma_50 = float(latest['sma_50'])
+                sma_200 = float(latest['sma_200'])
+                trend = "UP" if sma_50 > sma_200 else "DOWN"
+                
+                vol_30d = float(latest['vol_30d'])
+                vol_state = "HIGH" if vol_30d > 0.05 else "LOW" # 5% daily vol threshold
+                
+                rsi_14 = float(latest['rsi_14'])
+                regime = "TRENDING" if abs(rsi_14 - 50) > 10 else "RANGING"
+                
+                price = float(latest['price'])
+                drawdown = float(latest['drawdown'])
                 
                 summary = (
-                    f"Price ${latest['price']:.2f}. "
-                    f"Volatility is {vol_state} ({latest['vol_30d']:.1%}). "
-                    f"RSI at {latest['rsi_14']:.1f} suggests {regime.lower()} behavior."
+                    f"Price ${price:.2f}. "
+                    f"Volatility is {vol_state} ({vol_30d:.1%}). "
+                    f"RSI at {rsi_14:.1f} suggests {regime.lower()} behavior."
                 )
                 
                 insights.append(MarketInsight(
@@ -114,14 +126,14 @@ class PipelineService:
                     trend=trend,
                     volatility_state=vol_state,
                     regime=regime,
-                    drawdown_pct=latest['drawdown'],
+                    drawdown_pct=drawdown,
                     summary=summary
                 ))
             except Exception as e:
                 logger.error(f" Insight generation failed for {asset.name}: {e}")
         return insights
 
-    def run_full_pipeline(self, assets: List[Asset], days: int):
+    def run_full_pipeline(self, assets: list[Asset], days: int):
         logger.info("--- Starting Pipeline ---")
         self.fetch_data(assets, days)
         self.build_features(assets)
@@ -129,7 +141,7 @@ class PipelineService:
         insights = self.generate_insights(assets)
         
         md_path = self.reporter.generate_markdown(insights, preds)
-        json_path = self.reporter.generate_json(insights, preds)
+        self.reporter.generate_json(insights, preds)
         
         logger.info(f"Report generated: {md_path}")
         logger.info("--- Pipeline Complete ---")

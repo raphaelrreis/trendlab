@@ -1,7 +1,7 @@
-import typer
 import logging
 from pathlib import Path
-from typing import List, Optional
+
+import typer
 
 from trendlab.application.pipeline import PipelineService
 from trendlab.domain.models import Asset
@@ -36,7 +36,7 @@ def main(verbose: bool = False):
 
 @app.command()
 def fetch(
-    assets: List[str] = typer.Option(["btc", "eth"], help="List of asset symbols (btc, eth, sol)"),
+    assets: list[str] = typer.Option(["btc", "eth"], help="List of asset symbols (btc, eth, sol)"),
     days: int = typer.Option(365, help="Days of history to fetch")
 ):
     """Fetch historical market data from CoinGecko."""
@@ -52,7 +52,7 @@ def fetch(
 
 @app.command()
 def build_features(
-    assets: List[str] = typer.Option(["btc", "eth"], help="List of asset symbols")
+    assets: list[str] = typer.Option(["btc", "eth"], help="List of asset symbols")
 ):
     """Compute technical indicators and features."""
     service = get_service()
@@ -62,7 +62,7 @@ def build_features(
 
 @app.command()
 def train(
-    assets: List[str] = typer.Option(["btc", "eth"], help="List of asset symbols"),
+    assets: list[str] = typer.Option(["btc", "eth"], help="List of asset symbols"),
     model: str = typer.Option("logistic", help="Model type: logistic, boosting")
 ):
     """Train models and output predictions."""
@@ -75,7 +75,7 @@ def train(
 
 @app.command()
 def run(
-    assets: List[str] = typer.Option(["btc", "eth"], help="List of asset symbols"),
+    assets: list[str] = typer.Option(["btc", "eth"], help="List of asset symbols"),
     days: int = typer.Option(365, help="Days of history to fetch")
 ):
     """Run the full pipeline end-to-end."""

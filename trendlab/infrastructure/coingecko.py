@@ -1,7 +1,7 @@
 import time
 import logging
 from datetime import datetime, timezone
-from typing import List, Any, Dict
+from typing import Any
 
 import requests
 from requests.adapters import HTTPAdapter, Retry
@@ -34,7 +34,7 @@ class CoinGeckoProvider(DataProvider):
         session.mount("https://", HTTPAdapter(max_retries=retries))
         return session
 
-    def fetch_history(self, asset: Asset, days: int) -> List[MarketDataPoint]:
+    def fetch_history(self, asset: Asset, days: int) -> list[MarketDataPoint]:
         """
         Fetches historical market data (price, market cap, volume).
         
@@ -51,7 +51,7 @@ class CoinGeckoProvider(DataProvider):
         
         try:
             logger.info(f"Fetching {days} days of data for {asset.name}...")
-            response = self.session.get(endpoint, params=params, timeout=self.timeout)
+            response = self.session.get(endpoint, params=params, timeout=self.timeout)  # type: ignore
             response.raise_for_status()
             data = response.json()
             
@@ -70,7 +70,7 @@ class CoinGeckoProvider(DataProvider):
             logger.error(f"Unexpected error fetching data for {asset.name}: {e}")
             raise
 
-    def _parse_response(self, data: Dict[str, Any]) -> List[MarketDataPoint]:
+    def _parse_response(self, data: dict[str, Any]) -> list[MarketDataPoint]:
         prices = data.get("prices", [])
         market_caps = data.get("market_caps", [])
         total_volumes = data.get("total_volumes", [])
