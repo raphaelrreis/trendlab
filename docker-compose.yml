@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  trendlab-api:
+    build: .
+    container_name: trendlab-api
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/app/data
+      - ./reports:/app/reports
+    environment:
+      - ASSETS=btc,eth
+      - DAYS=365
+    restart: unless-stopped

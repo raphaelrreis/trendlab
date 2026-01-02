@@ -1,0 +1,12 @@
+# Production (PRD) Environment Values
+replicaCount: 3
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+persistence:
+  enabled: true
+  size: 20Gi
+env:
+  ASSETS: "btc,eth,sol,ada,dot"
+  DAYS: "730"

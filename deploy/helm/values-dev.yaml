@@ -1,0 +1,9 @@
+# Dev Environment Values
+replicaCount: 1
+autoscaling:
+  enabled: false
+persistence:
+  enabled: false
+env:
+  ASSETS: "btc,eth"
+  DAYS: "30"
