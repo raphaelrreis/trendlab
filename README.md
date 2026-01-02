@@ -1,22 +1,60 @@
-# TrendLab 🚀
+# TrendLab
 
-> **Production-grade Crypto Market Intelligence Pipeline**
+**Production-Grade Crypto Market Intelligence Pipeline**
 
-TrendLab is a robust Python-based ML pipeline that fetches historical crypto market data, computes technical indicators, and trains time-series validated machine learning models to generate short-term directional probabilities and actionable market insights.
+TrendLab is an end-to-end automated pipeline designed to analyze cryptocurrency market data. It handles the complete lifecycle of financial data processing—from ingestion and technical analysis to machine learning inference and reporting.
 
-**⚠️ DISCLAIMER: This software is for educational and research purposes only. It is NOT financial advice.**
+This project serves as a reference implementation for a robust, scalable, and "production-ready" quantitative research environment. It is designed for engineers and researchers who need a stable foundation to experiment with ML strategies without the overhead of building the underlying infrastructure from scratch.
 
-## Features
+---
 
-- **Automated Data Ingestion**: Resilient fetching from CoinGecko.
-- **Time-Series Rigor**: Strict prevention of look-ahead bias using `TimeSeriesSplit`.
-- **ML Engine**: Scikit-learn pipelines with Logistic Regression.
-- **Insight Generation**: Produces "Decision Insight" reports (Markdown/JSON).
-- **Platform Ready**: Dockerized, Kubernetes-ready (Helm), and Infrastructure-as-Code (Terraform).
+## Project Overview
 
-## Quickstart (Local)
+The pipeline operates in four distinct stages:
 
-### Docker Compose
+1.  **Ingestion:** resiliently fetches historical market data (Price, Volume, Market Cap) for assets like Bitcoin and Ethereum using external providers (CoinGecko).
+2.  **Processing:** Computes standard technical indicators including RSI, Moving Averages (SMA 50/200), Volatility, and Drawdown metrics.
+3.  **Machine Learning:** Trains predictive models (Logistic Regression) to forecast short-term market direction (Up/Down) using strictly validated time-series data.
+4.  **Reporting:** Generates automated insights in Markdown and JSON formats, classifying market regimes (Trending/Ranging) and identifying risk signals.
+
+## Key Strengths & Engineering Principles
+
+### 1. Robust Software Engineering
+*   **Clean Architecture:** The codebase follows a Hexagonal Architecture (Ports & Adapters) pattern, ensuring strict separation between domain logic, application orchestration, and infrastructure concerns.
+*   **Code Quality:** Enforces high standards using `ruff` for linting, `mypy` for static type checking, and `pytest` for comprehensive unit and functional testing.
+*   **CI/CD:** Fully automated GitHub Actions pipelines handle testing, linting, Docker image building, and deployment.
+*   **Infrastructure as Code (IaC):** The project is cloud-agnostic and scalable, featuring Terraform scripts for AWS EKS/Azure AKS provisioning and Helm charts for Kubernetes deployment.
+
+### 2. Data Science Rigor
+*   **Prevention of Look-Ahead Bias:** A critical flaw in many financial ML projects is training on future data. TrendLab strictly enforces `TimeSeriesSplit` and careful target shifting to ensure valid out-of-sample testing.
+*   **Modular Feature Engineering:** The system is designed to allow new technical indicators or external data sources to be plugged in without refactoring the core pipeline.
+
+### 3. Scalability & Cloud Readiness
+*   **Containerization:** Fully Dockerized application ensuring consistency across development, testing, and production environments.
+*   **Orchestration:** Ready for horizontal scaling via Kubernetes, allowing parallel processing of multiple assets.
+
+---
+
+## Roadmap & Future Improvements
+
+We have identified several areas for future development to evolve TrendLab from a solid framework into a high-performance trading engine:
+
+*   **Advanced ML Models:** Transition from baseline Logistic Regression to non-linear models like XGBoost, LSTMs, or Transformers to capture complex market dynamics.
+*   **Alternative Data:** Integrate on-chain metrics, social sentiment analysis, and macroeconomic indicators to improve predictive signal-to-noise ratio.
+*   **Enterprise Data Layer:** Replace local Parquet persistence with a scalable solution using S3-compatible object storage and a time-series database (e.g., TimescaleDB) to handle terabytes of tick-level data.
+*   **Backtesting Engine:** Implement a full event-driven backtester to simulate PnL, slippage, and fees, providing a realistic assessment of strategy profitability beyond simple directional accuracy.
+*   **API Scaling:** Implement an internal caching proxy or upgrade data providers to handle high-frequency requests without hitting rate limits.
+
+---
+
+## Technical Setup
+
+### Prerequisites
+*   Python 3.9+
+*   Docker & Docker Compose
+*   Poetry (for dependency management)
+
+### Quickstart (Local via Docker)
 
 The easiest way to run the full service locally:
 
@@ -27,7 +65,7 @@ make up
 
 The API will be available at `http://localhost:8080`.
 
-Trigger a run:
+Trigger a pipeline run:
 ```bash
 make run-local
 ```
@@ -37,58 +75,19 @@ Check logs:
 docker-compose logs -f
 ```
 
-### Manual Python Setup
+### Manual Development Setup
 
 ```bash
 make setup
+# Run the pipeline for Bitcoin and Ethereum
 poetry run trendlab run --assets btc --assets eth --days 365
 ```
 
 ## Infrastructure & Deployment
 
-### Kubernetes (Helm)
-
-We use Helm to deploy to Dev, Hml, and Prd environments.
-See [deploy/README.md](deploy/README.md) for details.
-
-### Infrastructure (Terraform)
-
-We support both AWS EKS and Azure AKS.
-See [infra/README.md](infra/README.md) for provisioning instructions.
-
-### CI/CD
-
-GitHub Actions pipelines are defined in `.github/workflows/`:
-- `ci.yml`: Runs on PRs (Lint, Test, Build).
-- `deploy.yml`: Pushes to GHCR and deploys to K8s via Helm (requires `KUBE_CONFIG` secret).
-
-## API Usage
-
-**POST /run**
-```json
-{
-  "assets": ["btc", "eth", "sol"],
-  "days": 365,
-  "horizon": 1
-}
-```
-
-**GET /health**
-Returns 200 OK if service is healthy.
-
-## Methodology
-
-### Feature Engineering
-We compute a standard set of technical factors including:
-- **Momentum**: RSI (14-day), Price ROC.
-- **Volatility**: 7-day and 30-day rolling log return std dev.
-- **Trend**: SMA 50/200 crossovers.
-- **Regime**: Market state classification (Trending vs Ranging).
-
-### Model Evaluation
-To avoid "leakage" common in financial ML:
-- Targets are shifted: $y_t = \mathbb{I}(Price_{t+1} > Price_t)$.
-- Validation uses **Walk-Forward** (expanding window) splitting.
+*   **Kubernetes:** Helm charts for Dev, Hml, and Prd environments are located in `deploy/helm`.
+*   **Terraform:** Infrastructure definitions for AWS and Azure are available in `infra/`.
+*   **CI/CD:** Workflows defined in `.github/workflows`.
 
 ## License
 

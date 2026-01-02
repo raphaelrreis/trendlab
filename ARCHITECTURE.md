@@ -1,45 +1,48 @@
-# Architecture Design Document
+# Architecture & Technology Stack
 
-## System Overview
+TrendLab is designed with a focus on maintainability, scalability, and strict adherence to software engineering best practices. This document outlines the core technologies and architectural patterns used in the system.
 
-TrendLab is designed as a modular, layered monolith. It strictly follows separation of concerns to ensure maintainability and testability.
+## Architectural Pattern: Hexagonal (Ports & Adapters)
 
-### Layers
+The application is structured to decouple the core business logic from external dependencies.
 
-1.  **Domain (`trendlab/domain`)**
-    - Contains pure Python data classes (`Asset`, `Prediction`) and interfaces (`Protocol`).
-    - **Rule**: No dependencies on external frameworks (pandas is allowed for data structures).
+*   **Domain Layer (`trendlab/domain`):** Contains pure Python dataclasses and interfaces (Ports). No external dependencies. Defines *what* the system does (e.g., `Asset`, `Prediction`).
+*   **Application Layer (`trendlab/application`):** Orchestrates data flows and use cases (e.g., `PipelineService`). Implements the business rules.
+*   **Infrastructure Layer (`trendlab/infrastructure`):** Implements the interfaces defined in the Domain (Adapters). Handles IO, such as API calls (`CoinGeckoProvider`) and file storage (`ParquetStorage`).
+*   **Analytics Layer (`trendlab/analytics`):** specialized logic for Feature Engineering and Model Training, encapsulating the Data Science complexity.
 
-2.  **Infrastructure (`trendlab/infrastructure`)**
-    - Implements Domain interfaces.
-    - `CoinGeckoProvider`: Handles HTTP requests, retries, and rate limits.
-    - `ParquetStorage`: Manages local file system persistence using performant Parquet files.
+## Technology Stack
 
-3.  **Analytics (`trendlab/analytics`)**
-    - Core business logic for data science.
-    - `FeatureEngineer`: Stateless transformation of raw price data into feature sets.
-    - `ModelEngine`: Wraps scikit-learn to provide a simplified training/inference API ensuring time-series safety.
+### Core Application
+*   **Language:** Python 3.9+ (chosen for its rich Data Science ecosystem).
+*   **Dependency Management:** [Poetry](https://python-poetry.org/) - Ensures deterministic builds and dependency resolution.
+*   **CLI Framework:** [Typer](https://typer.tiangolo.com/) - Provides an intuitive command-line interface.
+*   **API Framework:** [FastAPI](https://fastapi.tiangolo.com/) - High-performance, async-ready web framework for serving predictions.
 
-4.  **Application (`trendlab/application`)**
-    - `PipelineService`: Orchestrates the flow: Fetch -> Store -> Transform -> Train -> Report.
-    - Acts as the entry point for the CLI.
+### Data Science & Machine Learning
+*   **Data Processing:** [Pandas](https://pandas.pydata.org/) & [NumPy](https://numpy.org/).
+*   **Machine Learning:** [Scikit-learn](https://scikit-learn.org/) - Used for pipeline construction, preprocessing, and model training.
+*   **Validation:** [TimeSeriesSplit](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.TimeSeriesSplit.html) - Strictly enforced to prevent look-ahead bias in financial data.
 
-5.  **CLI (`trendlab/cli`)**
-    - Uses `typer` to expose Application services to the user.
-    - Handles arguments, parsing, and console output.
+### Code Quality & Standards
+*   **Linting:** [Ruff](https://docs.astral.sh/ruff/) - Extremely fast Python linter, replacing Flake8/Isort.
+*   **Type Checking:** [Mypy](https://mypy-lang.org/) - Enforces static typing to catch errors at build time.
+*   **Testing:** [Pytest](https://docs.pytest.org/) - Comprehensive test suite with coverage reporting.
+
+### Infrastructure & DevOps
+*   **Containerization:** Docker & Docker Compose - Ensures consistent runtime environments.
+*   **Orchestration:** Kubernetes (K8s) - The target deployment platform for scalability.
+*   **Package Management:** Helm - Manages Kubernetes manifests across environments (Dev, Hml, Prd).
+*   **Infrastructure as Code:** Terraform - Provisioning scripts for AWS EKS and Azure AKS.
+*   **CI/CD:** GitHub Actions - Automates the pipeline for Linting, Testing, Building, and Deploying.
 
 ## Data Flow
 
-1.  **Ingestion**: `fetch` command triggers `CoinGeckoProvider`. Data is normalized to UTC and saved as raw Parquet.
-2.  **Processing**: `build-features` loads raw data, applies `FeatureEngineer`, and saves `*_features.parquet`.
-3.  **Learning**: `train` loads feature sets.
-    - Rows with `NaN` (due to lags/windows) are dropped.
-    - `TimeSeriesSplit` creates 5 folds for validation.
-    - Model is refit on *all* available history for the final inference.
-4.  **Inference**: The model predicts the probability of an "Up" move for $t+1$ based on features at $t$ (today).
-
-## Design Decisions
-
-- **Local Storage**: We use a simple "Data Lake" directory structure (`data/raw`, `data/processed`) instead of a database for simplicity and portability. Parquet is chosen for type preservation and speed.
-- **Scikit-Learn**: Chosen over PyTorch/TensorFlow because tabular financial data often performs best with simple linear or tree-based models, and complexity adds risk of overfitting.
-- **Typer**: Chosen for its developer experience and type-hint integration.
+1.  **Trigger:** User initiates run via CLI or API.
+2.  **Fetch:** `CoinGeckoProvider` requests market data (handles rate limits/retries).
+3.  **Store Raw:** Raw JSON data is normalized and stored as Parquet files.
+4.  **Feature Engineering:** Technical indicators are computed vectorized via Pandas.
+5.  **Training/Inference:**
+    *   *Training:* Data is split chronologically. Model is trained on past, validated on "future".
+    *   *Inference:* Model predicts the probability of an "Up" move for the next interval based on the latest available data.
+6.  **Report:** Results are aggregated into Markdown reports and JSON artifacts for consumption.
