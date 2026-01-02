@@ -1,8 +1,8 @@
 import logging
-from typing import cast, Any
-import pandas as pd
-import numpy as np
+from typing import cast
 
+import numpy as np
+import pandas as pd
 
 logger = logging.getLogger(__name__)
 

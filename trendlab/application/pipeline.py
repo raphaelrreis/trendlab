@@ -1,15 +1,15 @@
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import cast, Any
+from typing import cast
 
-from trendlab.domain.models import Asset, Prediction, MarketInsight
+from trendlab.analytics.engine import ModelEngine
+from trendlab.analytics.features import FeatureEngineer
+from trendlab.analytics.reporting import ReportGenerator
+from trendlab.domain.models import Asset, MarketInsight, Prediction
 from trendlab.domain.ports import DataProvider, StorageAdapter
 from trendlab.infrastructure.coingecko import CoinGeckoProvider
 from trendlab.infrastructure.storage import ParquetStorage
-from trendlab.analytics.features import FeatureEngineer
-from trendlab.analytics.engine import ModelEngine
-from trendlab.analytics.reporting import ReportGenerator
 
 logger = logging.getLogger(__name__)
 

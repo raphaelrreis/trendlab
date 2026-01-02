@@ -1,13 +1,13 @@
 import logging
 
-import pandas as pd
 import numpy as np
-from sklearn.linear_model import LogisticRegression  # type: ignore
-from sklearn.ensemble import GradientBoostingClassifier  # type: ignore
-from sklearn.pipeline import Pipeline  # type: ignore
-from sklearn.preprocessing import StandardScaler  # type: ignore
-from sklearn.model_selection import TimeSeriesSplit  # type: ignore
-from sklearn.metrics import accuracy_score, precision_score, roc_auc_score, log_loss  # type: ignore
+import pandas as pd
+from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, log_loss, precision_score, roc_auc_score
+from sklearn.model_selection import TimeSeriesSplit
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
 
 from trendlab.domain.ports import MLModel
 
